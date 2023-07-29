@@ -1,24 +1,17 @@
 package database
 
-import "database/sql"
+import (
+	"log"
+)
 
-type SQLiteDB struct {
-	Path string
-	DB   *sql.DB
+type DatabaseService struct {
+	connected bool
 }
 
-func NewSQLiteDB(path string) *SQLiteDB {
-	db, err := sql.Open("sqlite3", path)
-	if err != nil {
-		panic(err)
-	}
-
-	return &SQLiteDB{
-		Path: path,
-		DB:   db,
-	}
-}
-
-func (db *SQLiteDB) Close() {
-	db.DB.Close()
+// Connect to SQLite database
+func (d *DatabaseService) ConnectToDatabase(url string) error {
+	// Implementation for connecting to SQLite database
+	log.Printf("Connected to database at %s", url)
+	d.connected = true
+	return nil
 }

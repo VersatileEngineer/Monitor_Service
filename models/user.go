@@ -2,7 +2,7 @@ package models
 
 import "github.com/google/uuid"
 
-type Wallet struct {
+type User struct {
 	UserID      uuid.UUID `json:"user_id"`
 	CoinID      int       `json:"coin_id"`
 	PublicKey   string    `json:"public_key"`

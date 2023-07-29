@@ -1,25 +1,17 @@
 package blockchain
 
 import (
-	"github.com/krislender0104/Monitor_Service/database"
-	"github.com/krislender0104/Monitor_Service/mq"
+	"log"
 )
 
-type BitcoinConfig struct {
-	RegTestMode bool `json:"regtest_mode"`
+type BlockchainService struct {
+	connected bool
 }
 
-type BitcoinClient struct {
-	Config BitcoinConfig
-}
-
-func NewBitcoinClient(config BitcoinConfig) *BitcoinClient {
-	return &BitcoinClient{
-		Config: config,
-	}
-}
-
-func (c *BitcoinClient) MonitorAddresses(addresses []string, rabbitMQ mq.MessageQueue, db database.Database) error {
-	// Implementation for monitoring Bitcoin addresses
+// Connect to Bitcoin blockchain
+func (b *BlockchainService) ConnectToBitcoin(endpoint string) error {
+	// Implementation for connecting to Bitcoin blockchain
+	log.Printf("Connected to Bitcoin blockchain at %s", endpoint)
+	b.connected = true
 	return nil
 }

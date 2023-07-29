@@ -2,71 +2,51 @@ package main
 
 import (
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/krislender0104/Monitor_Service/blockchain"
+	"github.com/krislender0104/Monitor_Service/config"
 	"github.com/krislender0104/Monitor_Service/database"
-	"github.com/krislender0104/Monitor_Service/mq"
+	"github.com/krislender0104/Monitor_Service/messagequeue"
+	"github.com/krislender0104/Monitor_Service/utils"
 )
 
 func main() {
-	//Initialize configuration
-	config, err := loadConfig()
-
+	// Load configuration
+	err := config.LoadConfig("config/config.yml")
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %s", err)
+		log.Fatalf("Error loading configuration: %s", err.Error())
 	}
 
-	//Create connections to RabbitMQ and SQLite
-	rabbitMQ := mq.NewRabbitMQ(config.RabbitMQURL)
-	sqliteDB := database.NewSQLiteDB(config.SQLiteDatabasePath)
+	// Initialize logger
+	utils.InitLogger()
 
-	//Initialize blockchain clients based on configuration
-	var blockchainClient blockchain.BlockChain
-	switch config.BlockchainType {
-	case "bitcoin":
-		blockchainClient = blockchain.NewBitcoinClient(config.BitcoinConfig)
-	case "ethereum":
-		blockchainClient = blockchain.NewEthereumClient(config.EthereumConfig)
-	default:
-		log.Fatalf("Invalid blockchain type: %s", config.BlockchainType)
-	}
+	// Create instances of blockchain, database, message queue, and backup services
+	blockchainService := blockchain.NewBlockchainService()
+	databaseService := database.NewDatabaseService()
+	messagequeueService := messagequeue.NewMessageQueueService()
+	backupService := backup.NewBackupService()
 
-	// Start address monitoring
-	err = blockchainClient.MonitorAddresses(config.Addresses, rabbitMQ, sqliteDB)
+	// Connect to blockchain based on configuration
+	err = blockchainService.ConnectToBlockchain(config.GetBlockchainType(), config.GetBlockchainEndpoint())
 	if err != nil {
-		log.Fatalf("Failed to start address monitoring: %s", err)
+		log.Fatalf("Error connecting to blockchain: %s", err.Error())
 	}
 
-	//Wait for termination siganl to gracefully shutdown
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	<-stop
+	// Connect to database
+	err = databaseService.ConnectToDatabase(config.GetDatabaseConnection())
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err.Error())
+	}
 
-	//Cleanup resources
-	rabbitMQ.Close()
-	sqliteDB.Close()
-}
+	// Connect to message queue
+	err = messagequeueService.ConnectToMessageQueue(config.GetMessageQueueURL())
+	if err != nil {
+		log.Fatalf("Error connecting to message queue: %s", err.Error())
+	}
 
-func loadConfig() (*config, error) {
-	//Load configuration from file or environment variables
-	return &config{
-		BlockchainType:     "bitcoin",
-		BitcoinConfig:      blockchain.BitcoinConfig{RegTestMode: true},
-		EthereumConfig:     blockchain.EthereumConfig{Testnet: true},
-		RabbitMQURL:        "amqp://guest:guest@localhost:5672/",
-		SQLiteDatabasePath: "data.db",
-		Addresses:          []string{""},
-	}, nil
-}
+	// Start monitoring addresses
+	messagequeueService.StartMonitoringAddresses(blockchainService, databaseService)
 
-type config struct {
-	BlockchainType     string
-	BitcoinConfig      blockchain.BitcoinConfig
-	EthereumConfig     blockchain.EthereumConfig
-	RabbitMQURL        string
-	SQLiteDatabasePath string
-	Addresses          []string
+	// Backup in case of failure
+	backupService.PerformBackup(databaseService)
 }
