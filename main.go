@@ -1,52 +1,54 @@
 package main
 
 import (
-	"log"
-
+	"github.com/krislender0104/Monitor_Service/backup"
 	"github.com/krislender0104/Monitor_Service/blockchain"
 	"github.com/krislender0104/Monitor_Service/config"
 	"github.com/krislender0104/Monitor_Service/database"
-	"github.com/krislender0104/Monitor_Service/messagequeue"
-	"github.com/krislender0104/Monitor_Service/utils"
+	"github.com/krislender0104/Monitor_Service/errorhandling"
+	"github.com/krislender0104/Monitor_Service/logging"
+	"github.com/krislender0104/Monitor_Service/rabbitmq"
 )
 
 func main() {
 	// Load configuration
-	err := config.LoadConfig("config/config.yml")
-	if err != nil {
-		log.Fatalf("Error loading configuration: %s", err.Error())
-	}
-
-	// Initialize logger
-	utils.InitLogger()
-
-	// Create instances of blockchain, database, message queue, and backup services
-	blockchainService := blockchain.NewBlockchainService()
-	databaseService := database.NewDatabaseService()
-	messagequeueService := messagequeue.NewMessageQueueService()
-	backupService := backup.NewBackupService()
+	cfg := config.LoadConfig()
 
 	// Connect to blockchain based on configuration
-	err = blockchainService.ConnectToBlockchain(config.GetBlockchainType(), config.GetBlockchainEndpoint())
-	if err != nil {
-		log.Fatalf("Error connecting to blockchain: %s", err.Error())
+	var client interface{}
+	if cfg.BlockchainType == "bitcoin" {
+		btcClient := blockchain.BitcoinClient{}
+		btcClient.ConnectToRegTest()
+		client = &btcClient
+	} else {
+		ethClient := blockchain.EthereumClient{}
+		ethClient.ConnectToTestnet()
+		client = &ethClient
 	}
 
-	// Connect to database
-	err = databaseService.ConnectToDatabase(config.GetDatabaseConnection())
-	if err != nil {
-		log.Fatalf("Error connecting to database: %s", err.Error())
+	// Initialize RabbitMQ client
+	rmqClient := rabbitmq.RabbitMQClient{}
+
+	// Receive designated addresses from RabbitMQ and start monitoring transactions
+	go rmqClient.ReceiveAddresses()
+
+	// Handle monitored data and store it in the database
+	dbClient := database.DatabaseClient{}
+	for {
+		// Get monitored data from blockchain client
+
+		// Store monitored data in database
+		dbClient.StoreData(data)
+
+		// Handle errors
+		errorhandling.HandleError(err)
 	}
 
-	// Connect to message queue
-	err = messagequeueService.ConnectToMessageQueue(config.GetMessageQueueURL())
-	if err != nil {
-		log.Fatalf("Error connecting to message queue: %s", err.Error())
-	}
+	// Log messages for debugging and issue resolution
+	logger := logging.Logger{}
+	logger.Log(message)
 
-	// Start monitoring addresses
-	messagequeueService.StartMonitoringAddresses(blockchainService, databaseService)
-
-	// Backup in case of failure
-	backupService.PerformBackup(databaseService)
+	// Backup microservice state to Redis in case of failure
+	redisClient := backup.RedisClient{}
+	redisClient.Backup()
 }

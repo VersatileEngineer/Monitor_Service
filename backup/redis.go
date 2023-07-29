@@ -1,13 +1,7 @@
 package backup
 
-import (
-	"log"
-)
+type RedisClient struct{}
 
-type BackupService struct{}
-
-// Perform backup in Redis
-func (r *BackupService) PerformBackup(databaseService *DatabaseService) {
-	// Implementation for performing backup in Redis
-	log.Println("Performed backup in Redis")
+func (redis *RedisClient) Backup() {
+	// Backup microservice state to Redis in case of failure
 }
