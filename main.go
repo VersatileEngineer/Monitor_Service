@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/krislender0104/Monitor_Service/blockchain"
 	"github.com/krislender0104/Monitor_Service/config"
+	"github.com/krislender0104/Monitor_Service/rabbitmq"
 )
 
 func main() {
@@ -18,22 +18,22 @@ func main() {
 	log.Fatal(cfg.BlockchainType)
 
 	// Connect to blockchain based on configuration
-	var client interface{}
-	if cfg.BlockchainType == "bitcoin" {
-		btcClient := blockchain.BitcoinClient{}
-		btcClient.ConnectToRegTest()
-		client = &btcClient
-	} else {
-		ethClient := blockchain.EthereumClient{}
-		ethClient.ConnectToTestnet()
-		client = &ethClient
-	}
+	// var client interface{}
+	// if cfg.BlockchainType == "bitcoin" {
+	// 	btcClient := blockchain.BitcoinClient{}
+	// 	btcClient.ConnectToRegTest()
+	// 	client = &btcClient
+	// } else {
+	// 	ethClient := blockchain.EthereumClient{}
+	// 	ethClient.ConnectToTestnet()
+	// 	client = &ethClient
+	// }
 
 	// Initialize RabbitMQ client
-	// rmqClient := rabbitmq.RabbitMQClient{}
+	rmqClient := rabbitmq.RabbitMQClient{}
 
 	// Receive designated addresses from RabbitMQ and start monitoring transactions
-	// go rmqClient.ReceiveAddresses()
+	go rmqClient.ReceiveAddresses(cfg.RabbitMQURL)
 
 	// Handle monitored data and store it in the database
 	// dbClient := database.DatabaseClient{}
