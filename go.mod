@@ -19,6 +19,7 @@ require (
 	github.com/ethereum/go-ethereum v1.12.0 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jrick/logrotate v1.0.0 // indirect

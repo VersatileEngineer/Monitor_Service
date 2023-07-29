@@ -1,5 +1,10 @@
 package blockchain
 
+import (
+	"github.com/krislender0104/Monitor_Service/database"
+	"github.com/krislender0104/Monitor_Service/mq"
+)
+
 type EthereumConfig struct {
 	Testnet bool `json:"testnet"`
 }

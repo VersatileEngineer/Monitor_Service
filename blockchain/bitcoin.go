@@ -1,5 +1,10 @@
 package blockchain
 
+import (
+	"github.com/krislender0104/Monitor_Service/database"
+	"github.com/krislender0104/Monitor_Service/mq"
+)
+
 type BitcoinConfig struct {
 	RegTestMode bool `json:"regtest_mode"`
 }
